@@ -1,11 +1,46 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Home{% endblock %}
+
+{% block title %}Add Numbers{% endblock %}
+
 {% block css %}
-    <link rel="stylesheet" href="{% static 'homepage/css/homepage.css' %}">{% endblock %}
-{% block body %}
-<H1>Home page</H1>
+<link rel="stylesheet" href="{% static 'homepage/css/homepage.css' %}">
 {% endblock %}
+
+{% block body %}
+<h1>Add Two Numbers</h1>
+
+<form id="add-form">
+    <input type="number" id="num1" placeholder="Enter first number" required>
+    <input type="number" id="num2" placeholder="Enter second number" required>
+    <button type="submit">Add</button>
+</form>
+
+<p id="result" style="margin-top: 10px; font-weight: bold;"></p>
+{% endblock %}
+
 {% block js %}
-    <script type="text/javascript" src="{% static 'home/js/homepage.js' %}"></script>
+<script>
+    document.getElementById("add-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const a = document.getElementById("num1").value;
+        const b = document.getElementById("num2").value;
+
+        // 🌐 Use full URL on Render, relative URL locally
+        const baseURL = window.location.origin.includes('localhost')
+            ? ''
+            : 'https://cadworkbridge.onrender.com';
+
+        try {
+            const response = await fetch(`${baseURL}/api/add?a=${a}&b=${b}`);
+            if (!response.ok) throw new Error("Server error");
+
+            const data = await response.json();
+            document.getElementById("result").textContent = "Result: " + data.result;
+        } catch (error) {
+            document.getElementById("result").textContent = "Error: " + error.message;
+        }
+    });
+</script>
 {% endblock %}
