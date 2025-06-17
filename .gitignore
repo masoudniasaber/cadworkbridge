@@ -21,3 +21,4 @@ venv/
 *.log
 *.bak
 *.tmp
+.env
