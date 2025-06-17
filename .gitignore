@@ -13,8 +13,8 @@ __pycache__/
 db.sqlite3
 
 # Static/media files (optional)
-staticfiles/
-media/
+#staticfiles/
+#media/
 
 # Log files
 *.log
