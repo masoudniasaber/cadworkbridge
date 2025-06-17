@@ -1,0 +1,20 @@
+# Virtual env
+env/
+
+# PyCharm & VSCode settings
+.idea/
+.vscode/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# SQLite database
+db.sqlite3
+
+# Static/media files (optional)
+staticfiles/
+media/
+
+# Log files
+*.log
