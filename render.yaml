@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: cadworkbridge
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn cadworkbridge.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: cadworkbridge.settings
