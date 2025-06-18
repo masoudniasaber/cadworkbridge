@@ -93,13 +93,6 @@ WSGI_APPLICATION = 'cadworkbridge.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': dj_database_url.config(
         default=config('DATABASE_URL'),
@@ -148,7 +141,11 @@ STATIC_URL = '/static/'       # base URL for all static files
 STATICFILES_DIRS = [
     BASE_DIR / 'static',      # your project‑level source files
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # where collectstatic dumps everything for production
+#python manage.py collectstatic
+# where collectstatic dumps everything for production
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # Media (if users upload images/files)
 MEDIA_URL = '/media/'
