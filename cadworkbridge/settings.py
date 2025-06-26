@@ -42,10 +42,8 @@ INSTALLED_APPS = [
     'bridge',
     'homepage',
     'corsheaders',
-    'rest_framework_simplejwt',
-    'djoser',
-
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

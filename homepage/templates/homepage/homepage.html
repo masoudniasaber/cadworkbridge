@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Add Numbers{% endblock %}
+{% block title %}Add and Chat{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="{% static 'homepage/css/homepage.css' %}">
@@ -17,23 +17,33 @@
 </form>
 
 <p id="result" style="margin-top: 10px; font-weight: bold;"></p>
+
+<hr style="margin: 30px 0;">
+
+<h1>Chat with LLM</h1>
+
+<form id="chat-form" style="margin-bottom: 10px;">
+    <input type="text" id="chat-message" placeholder="Ask something..." required>
+    <button type="submit">Send</button>
+</form>
+
+<div id="chat-box" style="background-color: white; padding: 10px; border-radius: 5px; max-width: 600px;">
+    <!-- Replies will appear here -->
+</div>
 {% endblock %}
 
 {% block js %}
 <script>
+    // Add numbers
     document.getElementById("add-form").addEventListener("submit", async function (e) {
         e.preventDefault();
-
         const a = document.getElementById("num1").value;
         const b = document.getElementById("num2").value;
 
-        // 🌐 Use full URL on Render, relative URL locally
-        const baseURL = window.location.origin.includes('localhost')
-            ? ''
-            : 'https://cadworkbridge.onrender.com';
+        const baseURL = window.location.origin.includes('localhost') ? '' : 'https://cadworkbridge.onrender.com';
 
         try {
-            const response = await fetch(`${baseURL}/api/add?a=${a}&b=${b}`);
+            const response = await fetch(`${baseURL}/api/add/?a=${a}&b=${b}`);
             if (!response.ok) throw new Error("Server error");
 
             const data = await response.json();
@@ -41,6 +51,44 @@
         } catch (error) {
             document.getElementById("result").textContent = "Error: " + error.message;
         }
+    });
+
+    // Chat with LLM
+    document.getElementById("chat-form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const message = document.getElementById("chat-message").value;
+        const chatBox = document.getElementById("chat-box");
+
+        const userMsg = document.createElement("div");
+        userMsg.textContent = "You: " + message;
+        userMsg.style.margin = "5px 0";
+        userMsg.style.fontWeight = "bold";
+        chatBox.appendChild(userMsg);
+
+        try {
+            const response = await fetch("/api/chatbot/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ message }),
+            });
+
+            if (!response.ok) throw new Error("Chat API failed");
+
+            const data = await response.json();
+
+            const botReply = document.createElement("div");
+            botReply.textContent = "AI: " + data.response;
+            botReply.style.margin = "5px 0 10px 20px";
+            chatBox.appendChild(botReply);
+
+        } catch (error) {
+            const errMsg = document.createElement("div");
+            errMsg.textContent = "Error: " + error.message;
+            errMsg.style.color = "red";
+            chatBox.appendChild(errMsg);
+        }
+
+        document.getElementById("chat-message").value = "";
     });
 </script>
 {% endblock %}
