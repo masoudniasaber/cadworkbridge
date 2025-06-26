@@ -7,18 +7,22 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 import os
 
-# ✅ Just try to load .env from wherever the current working directory is
-load_dotenv()
+# ✅ Load environment variables from .env (for local dev)
+load_dotenv(".env")
+
+# ✅ Get the OpenAI API key
+api_key = os.getenv("OPENAI_API_KEY")
 
 # ✅ Set up router
 router_chatbot = Router(tags=["Chatbot"])
 
-# ✅ Load LLM with env var
+# ✅ Initialize LLM
 llm = ChatOpenAI(
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    openai_api_key=api_key,
     temperature=0.3
 )
 
+# ✅ Chatbot POST endpoint
 @router_chatbot.post("/")
 def post_chatbot(request, message: str = Form(...)):
     trigger_words = ["document", "pdf", "title", "summary", "content", "text", "info", "information"]
@@ -37,7 +41,17 @@ def post_chatbot(request, message: str = Form(...)):
             return {"response": result}
 
         except Exception as e:
-            return {"response": f"PDF load error: {str(e)}"}
+            return {"response": f"❌ PDF load error: {str(e)}"}
+
     else:
         reply = llm.invoke([HumanMessage(content=message)])
         return {"response": reply.content}
+
+# ✅ Temporary API key check route
+@router_chatbot.get("/check-openai-key/")
+def check_openai_key(request):
+    key = os.getenv("OPENAI_API_KEY")
+    return {
+        "key_found": bool(key),
+        "starts_with": key[:5] + "..." if key else "❌ Not set"
+    }
