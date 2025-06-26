@@ -23,19 +23,22 @@ def extract_pdf_text(file_path: str) -> str:
 
 def post_proofread_pdf(full_text: str) -> str:
     prompt = f"""
-You're a technical proofreader for a construction PDF.
+    You're a professional English spelling and grammar proofreader.
 
-❌ Ignore numbers, drawing references, and standard acronyms.
-✅ Only list real spelling mistakes or word issues — especially in UPPERCASE titles.
+    ❗Do NOT assume any misspelled word is technical.
+    ✅ Find and correct all real spelling mistakes – even if they seem construction-related or in UPPERCASE.
 
-⚠️ Format corrections like:
-"WRONG" ➜ "CORRECT"
+    ❌ Ignore known acronyms like DPC, N/A, etc.
 
-Preserve page numbers if visible.
+    📝 Format:
+    "WRONG" ➜ "CORRECT"
 
-Now check:
-{full_text}
-"""
+    Example:
+    "Plase" ➜ "Please"
+
+    Now check this document:
+    {full_text}
+    """
     try:
         result = llm.invoke(prompt)
         return result.content.strip()
