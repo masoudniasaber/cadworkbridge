@@ -3,17 +3,21 @@ from ninja.files import UploadedFile
 from langchain_openai import ChatOpenAI
 import fitz  # PyMuPDF
 from dotenv import load_dotenv
-from pathlib import Path
 import os
 import tempfile
 
-load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent / ".env")
+# ✅ Load .env from current folder if it exists (for local dev)
+# load_dotenv(".env")
 
+# ✅ Get OpenAI API key
+api_key = os.getenv("OPENAI_API_KEY")
+
+# ✅ Set up router
 router_pdf = Router(tags=["PDF Spell Checker"])
 
 # ✅ Initialize OpenAI client
 llm = ChatOpenAI(
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    openai_api_key=api_key,
     temperature=0.2
 )
 
@@ -71,3 +75,12 @@ def post_pdf_spellcheck(request, pdf: UploadedFile = File(...)):
 
     except Exception as e:
         return {"error": f"❌ Failed to process: {str(e)}"}
+
+
+@router_pdf.get("/check-openai-key/")
+def check_openai_key(request):
+    key = os.getenv("OPENAI_API_KEY")
+    return {
+        "key_found": bool(key),
+        "starts_with": key[:5] + "..." if key else "❌ Not set"
+    }
