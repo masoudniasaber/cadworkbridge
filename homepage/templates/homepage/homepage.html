@@ -1,94 +1,119 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
 
-{% block title %}Add and Chat{% endblock %}
-
-{% block css %}
-<link rel="stylesheet" href="{% static 'homepage/css/homepage.css' %}">
-{% endblock %}
+{% block title %}Add Two Numbers & Chatbot{% endblock %}
 
 {% block body %}
-<h1>Add Two Numbers</h1>
+  <h1>Add Two Numbers</h1>
+  <form id="addForm" autocomplete="off">
+    <label for="num1">First number</label>
+    <input id="num1" type="number" placeholder="Enter first number" required />
 
-<form id="add-form">
-    <input type="number" id="num1" placeholder="Enter first number" required>
-    <input type="number" id="num2" placeholder="Enter second number" required>
-    <button type="submit">Add</button>
-</form>
+    <label for="num2">Second number</label>
+    <input id="num2" type="number" placeholder="Enter second number" required />
 
-<p id="result" style="margin-top: 10px; font-weight: bold;"></p>
+    <button id="send" type="submit">Add</button>
+  </form>
+  <p id="result"></p>
 
-<hr style="margin: 30px 0;">
+  <hr>
 
-<h1>Chat with LLM</h1>
-
-<form id="chat-form" style="margin-bottom: 10px;">
-    <input type="text" id="chat-message" placeholder="Ask something..." required>
-    <button type="submit">Send</button>
-</form>
-
-<div id="chat-box" style="background-color: white; padding: 10px; border-radius: 5px; max-width: 600px;">
-    <!-- Replies will appear here -->
-</div>
+  <h1>Chat with LLM</h1>
+  <form id="chat-form" style="margin-bottom: 10px;">
+      <input type="text" id="chat-message" placeholder="Ask something..." required>
+      <button type="submit">Send</button>
+  </form>
+  <div id="chat-box" style="background-color: white; padding: 10px; border-radius: 5px; max-width: 600px; min-height: 40px;">
+      <!-- Replies will appear here -->
+  </div>
 {% endblock %}
 
 {% block js %}
 <script>
-    // Add numbers
-    document.getElementById("add-form").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const a = document.getElementById("num1").value;
-        const b = document.getElementById("num2").value;
+  // Add Two Numbers logic
+  function getApiBaseUrl() {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      return "http://localhost:8000";
+    }
+    return "https://cadworkbridge.com";
+  }
 
-        const baseURL = window.location.origin.includes('localhost') ? '' : 'https://cadworkbridge.onrender.com';
+  document.getElementById("addForm").onsubmit = async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById("send");
+    btn.disabled = true;
+    btn.textContent = "Calculating...";
+    const a = Number(document.getElementById("num1").value);
+    const b = Number(document.getElementById("num2").value);
+    const resultElem = document.getElementById("result");
+    resultElem.textContent = "";
+    try {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(apiBase + "/api/math/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ a, b }),
+      });
+      if (!response.ok) throw new Error("Server error: " + response.status);
+      const data = await response.json();
+      if (typeof data.result === "number") {
+        resultElem.textContent = "Result: " + data.result;
+      } else {
+        resultElem.textContent = "Unexpected response.";
+      }
+    } catch (err) {
+      resultElem.textContent = "Error: " + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add";
+    }
+  };
 
-        try {
-            const response = await fetch(`${baseURL}/api/add/?a=${a}&b=${b}`);
-            if (!response.ok) throw new Error("Server error");
+  // Chat with LLM logic
+  document.getElementById("chat-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const chatInput = document.getElementById("chat-message");
+    const chatBox = document.getElementById("chat-box");
+    const message = chatInput.value.trim();
+    if (!message) return;
 
-            const data = await response.json();
-            document.getElementById("result").textContent = "Result: " + data.result;
-        } catch (error) {
-            document.getElementById("result").textContent = "Error: " + error.message;
-        }
-    });
+    // Show user message
+    const userMsg = document.createElement("div");
+    userMsg.textContent = "You: " + message;
+    userMsg.style.margin = "5px 0";
+    userMsg.style.fontWeight = "bold";
+    chatBox.appendChild(userMsg);
 
-    // Chat with LLM
-    document.getElementById("chat-form").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const message = document.getElementById("chat-message").value;
-        const chatBox = document.getElementById("chat-box");
+    chatInput.value = "";
+    chatInput.disabled = true;
 
-        const userMsg = document.createElement("div");
-        userMsg.textContent = "You: " + message;
-        userMsg.style.margin = "5px 0";
-        userMsg.style.fontWeight = "bold";
-        chatBox.appendChild(userMsg);
+    try {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(apiBase + "/api/chatbot/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
 
-        try {
-            const response = await fetch("/api/chatbot/", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ message }),
-            });
+      if (!response.ok) throw new Error("Chat API failed");
 
-            if (!response.ok) throw new Error("Chat API failed");
+      const data = await response.json();
 
-            const data = await response.json();
+      const botReply = document.createElement("div");
+      botReply.textContent = "AI: " + (data.response || "No response");
+      botReply.style.margin = "5px 0 10px 20px";
+      chatBox.appendChild(botReply);
 
-            const botReply = document.createElement("div");
-            botReply.textContent = "AI: " + data.response;
-            botReply.style.margin = "5px 0 10px 20px";
-            chatBox.appendChild(botReply);
-
-        } catch (error) {
-            const errMsg = document.createElement("div");
-            errMsg.textContent = "Error: " + error.message;
-            errMsg.style.color = "red";
-            chatBox.appendChild(errMsg);
-        }
-
-        document.getElementById("chat-message").value = "";
-    });
+    } catch (error) {
+      const errMsg = document.createElement("div");
+      errMsg.textContent = "Error: " + error.message;
+      errMsg.style.color = "red";
+      chatBox.appendChild(errMsg);
+    } finally {
+      chatInput.disabled = false;
+      chatInput.focus();
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  });
 </script>
 {% endblock %}
